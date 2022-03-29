@@ -4,12 +4,10 @@ from pymongo import MongoClient
 
 client = MongoClient()
 
-#client = MongoClient('localhost', 27017)
-client = MongoClient('dtim.essi.upc.edu', 27017)
+client = MongoClient('localhost', 27017)
 
+db = client.test
 
-db = client.DBkleber_reyes
+collection = db.CollectionName
 
-countries = db.country
-
-pprint.pprint(countries.find_one())
+pprint.pprint(collection.find_one())
