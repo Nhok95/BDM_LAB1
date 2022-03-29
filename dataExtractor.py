@@ -2,14 +2,13 @@ import os
 from os.path import join, isfile
 import json
 import re
+import pandas as pd
 
 class dataExtractor:
 
     sourcePath = join(os.getcwd(),'Sources')
 
-    idealistaPath = join(sourcePath,'idealista')
     openDataIncomePath = join(sourcePath,'opendatabcn-income')
-    lookUpPath = join(sourcePath,'lookup_tables')
 
     def __init__(self):
         pass
@@ -17,7 +16,9 @@ class dataExtractor:
     def idealistaDataExtractor(self):
 
         idealistaList = []
-        jsonFiles = [f for f in os.listdir(self.idealistaPath) if isfile(join(self.idealistaPath, f))]
+        idealistaPath = join(self.sourcePath,'idealista')
+        
+        jsonFiles = [f for f in os.listdir(idealistaPath) if isfile(join(idealistaPath, f))]
 
         for jsonFile in jsonFiles:
 
@@ -64,7 +65,25 @@ class dataExtractor:
                 # Closing file
             f.close()
 
-        print(len(idealistaList))
+        return idealistaList
+
+    def lookUpExtractor(self):
+
+        lookUpList = []
+        IdealistaLookUpPath = join(self.sourcePath,'lookup_tables')
+
+        idealista_csv = pd.read_csv(open(join(IdealistaLookUpPath, 'idalista_extended.csv')), delimiter=',')
+
+        
+
+
+        income_csv = pd.read_csv(open(join(IdealistaLookUpPath, 'income_opendatabcn_extended.csv')), delimiter=',')
+        
+
+
+        return lookUpList
+
+
 
 
 if __name__ == "__main__":
@@ -72,3 +91,7 @@ if __name__ == "__main__":
     dataExtractor = dataExtractor()
 
     idealista = dataExtractor.idealistaDataExtractor()
+    lookUp = dataExtractor.lookUpExtractor()
+
+    print(len(idealista))
+    print(len(lookUp))
