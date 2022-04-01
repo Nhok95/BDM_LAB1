@@ -45,6 +45,10 @@ class MongoDB(object):
 
 		return query_result
 
+	def count_documents(self, collection, query = {}):
+		documents_count = self.database[collection].count_documents(query)
+		return documents_count
+
 	def delete_one(self, collection, query):
 		self.database[collection].delete_one(query)
 
@@ -59,9 +63,10 @@ class MongoDB(object):
 	def delete_collection(self, collection):
 		self.database[collection].drop
 
-	def update_one(self, collection, query, new_values):
-		self.database[collection].update_one(query, new_values)
+	def update_one(self, collection, query, new_values, upsert = False):
+		self.database[collection].update_one(query, new_values, upsert)
 
-	def update_many(self, collection, query, new_values):
-		modified_count = self.database[collection].update_many(query, new_values)
+	def update_many(self, collection, query, new_values, upsert = False):
+		modified_count = self.database[collection].update_many(query, new_values, upsert)
 		return modified_count
+		
