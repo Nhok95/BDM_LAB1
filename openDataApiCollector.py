@@ -1,13 +1,21 @@
+# Custom class to connect and interact with the Mongo data base
+from MongoDB import MongoDB
+import constants as cnt
+
 import json
 import pprint
-
 import urllib
 import urllib.request
+
+
 
 
 class openDataCollector:
 
     apiUrl = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?'
+
+    resourceCollectionBirths = 'opendatabcn_births'
+    resourceNameBirths = '_naixements_sexe.csv'
     resourceDictBirths = {
         '2007': '1b1bdb74-6078-40e8-a002-fcff87295688',
         '2008': 'f6029e43-e5f9-4623-9c23-bf0aba7dd39b',
@@ -26,6 +34,8 @@ class openDataCollector:
         
     }
 
+    resourceCollectionAvgRent = 'opendatabcn_rent'
+    resourceNameAvgRent = '_lloguer_preu_trim.csv'
     resourceDictAvgRent = {
         '2014': '5855ba6c-f554-4a99-837a-04ea69bc71f4',
         '2015': 'fcdbfa43-d97a-4da3-b78b-6f255dbcf4cc',
@@ -39,59 +49,59 @@ class openDataCollector:
     }
 
     def __init__(self):
-        pass
+        self.db = MongoDB(cnt.HOST, cnt.PORT, db_name= cnt.TEMPORAL_DB)
 
     def openDataAPICollector(self, source='rent'):
 
         if source == 'rent':
+            collectionName = self.resourceCollectionAvgRent
             resourceDict = self.resourceDictAvgRent
-            resourceName = '_lloguer_preu_trim.csv'
+            resourceName = self.resourceNameAvgRent
 
         elif source == 'births':
+            collectionName = self.resourceCollectionBirths
             resourceDict = self.resourceDictBirths
-            resourceName = '_naixements_sexe.csv'
+            resourceName = self.resourceNameBirths
 
+        if not self.db.collection_exists(collectionName):
+            self.db.create_collection(collectionName)
 
+        jsonList = []
         for resource_year, resource_url in resourceDict.items():
             
-            print(resource_year)
+            #print(resource_year)
             params = {
                 'resource_id': resource_url,
                 'limit': 32000 # upper limit by default in CKAN Data API 
             }
 
             url = self.apiUrl + urllib.parse.urlencode(params)
-            print(url)
-            print()
+            #print(url)
 
             response = urllib.request.urlopen(url)
-
             data_json = json.loads(response.read())
-
             
             if data_json.get('success') == True:
                 data = data_json.get('result')
 
-                jsonResult = {
+                jsonFile= {
                     'resource_id': data.get('resource_id'),
                     'resource_name': resource_year + resourceName,
                     'schema': data.get('fields'),
                     'records': data.get('records'),
                     'totalRecords': data.get('total')
                 }
+                #pprint.pprint(data_json)
 
-                ## Meter llamada para insertar los datos
+                jsonList.append(jsonFile)
+            print()
 
-            #pprint.pprint(data_json)
+        self.db.insert_many(collectionName, jsonList)
 
-        
         return True
-
-
-
 
 if __name__ == "__main__":
 
     dataCollector = openDataCollector()
-    
+
     dataCollector.openDataAPICollector()
