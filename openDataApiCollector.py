@@ -8,8 +8,6 @@ import urllib
 import urllib.request
 
 
-
-
 class openDataCollector:
 
     apiUrl = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?'
