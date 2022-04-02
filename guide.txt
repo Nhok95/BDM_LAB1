@@ -1,0 +1,30 @@
+HOST NAME: 10.4.41.45
+
+# RUN MONGO SERVER
+~/BDM_Software/mongodb/bin/mongod --bind_ip_all --dbpath /home/bdm/BDM_Software/data/
+mongodb_data/
+
+# RUN MONGO SHELL
+~/BDM_Software/mongodb/bin/mongo
+
+# SHOW ALL DATABASES
+show dbs
+
+# SELECT A DATABASE
+use <BD_NAME>
+
+ex:
+    use temporal
+    use persistence
+
+# SHOW ALL COLLECTIONS IN A DB
+show collections
+
+# ONE FILE
+db.opendatabcn_rent.findOne()
+
+# NUMBER OF DOCUMENTS
+db.opendatabcn_rent.count()
+
+# DELETE COLLECTION
+db.opendatabcn_rent.drop()

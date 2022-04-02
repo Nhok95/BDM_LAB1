@@ -67,14 +67,12 @@ class openDataCollector:
         jsonList = []
         for resource_year, resource_url in resourceDict.items():
             
-            #print(resource_year)
             params = {
                 'resource_id': resource_url,
                 'limit': 32000 # upper limit by default in CKAN Data API 
             }
 
             url = self.apiUrl + urllib.parse.urlencode(params)
-            #print(url)
 
             response = urllib.request.urlopen(url)
             data_json = json.loads(response.read())
@@ -92,7 +90,6 @@ class openDataCollector:
                 #pprint.pprint(data_json)
 
                 jsonList.append(jsonFile)
-            print()
 
         self.db.insert_many(collectionName, jsonList)
 
