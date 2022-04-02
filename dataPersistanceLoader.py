@@ -9,7 +9,7 @@ class dataPersistanceLoader:
 
     def __init__(self):
         self.db_temporal = MongoDB(cnt.HOST, cnt.PORT, db_name= cnt.TEMPORAL_DB)
-        self.db = MongoDB(cnt.HOST, cnt.PORT, db_name= cnt.TEMPORAL_DB)
+        self.db = MongoDB(cnt.HOST, cnt.PORT, db_name= cnt.PERSISTENT_DB)
 
     def dataAPIPersistanceLoader(self):
 
@@ -17,9 +17,12 @@ class dataPersistanceLoader:
         
         temporalFiles = self.db_temporal.find(collectionName)
 
+        jsonList = []
         for doc in temporalFiles:
             print(type(doc))
             print()
+
+        self.db.insert_many(collectionName, jsonList)
 
         return True
 
