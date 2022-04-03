@@ -6,4 +6,5 @@ TEMPORAL_DB = 'p1_temporal_db'
 #PERSISTENT_DB = 'p1_persistent_db'
 PERSISTENT_DB = 'p1_persistence_db'
 
+
 RENT_COLLECTION_NAME = 'opendatabcn_rent'

@@ -31,11 +31,11 @@ class dataPersistanceLoader:
         jsonList = []
         for doc in temporalFiles:
 
-            #key = doc.get('_id').split('$')
-            data = doc.get('value').get('data')
-            metadata = doc.get('value').get('metadata')
+            source = doc.get('name').split('$')
+            data = doc.get('data')
 
-            key_id = metadata.get('sourceName') + '$' + \
+
+            key_id = source[1] + '$' + \
                      data.get('resource_id') + '$' + \
                      self.getIngestionTimestamp()
 
@@ -45,8 +45,7 @@ class dataPersistanceLoader:
                     'data': data.get('records'),
                     'metadata': {
                         'schema': data.get('fields'),
-                        'year': metadata.get('year'),
-                        'resource_id': data.get('resource_id'),
+                        'origin_date': "01-01-" + source[0],
                         'totalRecords': data.get('total')     
                     }
                 }
@@ -55,7 +54,7 @@ class dataPersistanceLoader:
             jsonList.append(jsonFile)
         
 
-        #pprint(jsonList[0])
+        pprint(jsonList[0])
         # Same number of documents 
         if temporalLength == len(jsonList):
             self.db.insert_many(self.collectionName, jsonList)

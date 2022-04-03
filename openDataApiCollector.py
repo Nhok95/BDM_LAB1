@@ -54,15 +54,11 @@ class openDataCollector:
             
             if data_json.get('success') == True:
 
+                origin = resource_year + '$' + self.sourceName
+
                 jsonFile = {
-                    'value': {
-                        'data': data_json.get('result'),
-                        'metadata': {
-                            'year': resource_year,
-                            'sourceName': self.sourceName,
-                            'resourceName': self.resourceName
-                        }
-                    }
+                    'name': origin,
+                    'data': data_json.get('result')
                 }
                 #pprint.pprint(data_json)
 
