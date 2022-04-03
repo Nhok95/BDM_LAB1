@@ -1,4 +1,5 @@
 # Custom class to connect and interact with the Mongo data base
+from datetime import datetime
 from MongoDB import MongoDB
 import constants as cnt
 
@@ -12,8 +13,10 @@ class openDataCollector:
 
     apiUrl = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?'
 
-    resourceCollectionBirths = 'opendatabcn_births'
-    resourceNameBirths = '_naixements_sexe.csv'
+    sourceName = 'opendatabcn'
+
+    resourceCollectionBirths = 'births'
+    resourceNameBirths = 'naixements_sexe'
     resourceDictBirths = {
         '2007': '1b1bdb74-6078-40e8-a002-fcff87295688',
         '2008': 'f6029e43-e5f9-4623-9c23-bf0aba7dd39b',
@@ -33,7 +36,7 @@ class openDataCollector:
     }
 
     resourceCollectionAvgRent = 'opendatabcn_rent'
-    resourceNameAvgRent = '_lloguer_preu_trim.csv'
+    resourceNameAvgRent = 'lloguer_preu_trim'
     resourceDictAvgRent = {
         '2014': '5855ba6c-f554-4a99-837a-04ea69bc71f4',
         '2015': 'fcdbfa43-d97a-4da3-b78b-6f255dbcf4cc',
@@ -49,7 +52,13 @@ class openDataCollector:
     def __init__(self):
         self.db = MongoDB(cnt.HOST, cnt.PORT, db_name= cnt.TEMPORAL_DB)
 
+    def getIngestionTimestamp(self):
+        
+        return datetime.now().strftime(r"%Y-%m-%dT%H.%M.%S.%f")[:-3]
+
     def openDataAPICollector(self, source='rent'):
+
+        print('Collecting rent data from API...')
 
         if source == 'rent':
             collectionName = self.resourceCollectionAvgRent
@@ -78,20 +87,23 @@ class openDataCollector:
             data_json = json.loads(response.read())
             
             if data_json.get('success') == True:
-                data = data_json.get('result')
 
-                jsonFile= {
-                    'resource_id': data.get('resource_id'),
-                    'resource_name': resource_year + resourceName,
-                    'schema': data.get('fields'),
-                    'records': data.get('records'),
-                    'totalRecords': data.get('total')
+                jsonFile = {
+                    '_id': self.sourceName + '$'+ resourceName +'$' + self.getIngestionTimestamp(),
+                    'value': {
+                        'data': data_json.get('result'),
+                        'metadata': {
+                            'year': resource_year
+                        }
+                    }
                 }
                 #pprint.pprint(data_json)
 
                 jsonList.append(jsonFile)
 
         self.db.insert_many(collectionName, jsonList)
+
+        print('Data stored succesfully.')
 
         return True
 

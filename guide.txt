@@ -14,8 +14,8 @@ show dbs
 use <BD_NAME>
 
 ex:
-    use temporal
-    use persistence
+    use p1_temporal_db
+    use p1_persistence_db
 
 # SHOW ALL COLLECTIONS IN A DB
 show collections
