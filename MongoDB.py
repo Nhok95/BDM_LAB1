@@ -28,8 +28,8 @@ class MongoDB(object):
 		return inserted_id
 
 	def insert_many(self, collection, data):
-		inserted_ids = self.database[collection].insert_many(data)
-		return inserted_ids
+		inserted_ids_object = self.database[collection].insert_many(data)
+		return inserted_ids_object.inserted_ids
 
 	def find_one(self, collection, query = None):
 		return self.database[collection].find_one(query)
