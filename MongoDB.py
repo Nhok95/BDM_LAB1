@@ -61,7 +61,7 @@ class MongoDB(object):
 		return deleted_count
 
 	def delete_collection(self, collection):
-		self.database[collection].drop
+		self.database[collection].drop()
 
 	def update_one(self, collection, query, new_values, upsert = False):
 		self.database[collection].update_one(query, new_values, upsert)
