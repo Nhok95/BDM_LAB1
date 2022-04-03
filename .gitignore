@@ -18,4 +18,4 @@ log.txt
 
 .Rhistory
 
-output.txt
+output*.txt
