@@ -1,8 +1,7 @@
 HOST NAME: 10.4.41.45
 
 # RUN MONGO SERVER
-~/BDM_Software/mongodb/bin/mongod --bind_ip_all --dbpath /home/bdm/BDM_Software/data/
-mongodb_data/
+~/BDM_Software/mongodb/bin/mongod --bind_ip_all --dbpath /home/bdm/BDM_Software/data/mongodb_data/
 
 # RUN MONGO SHELL
 ~/BDM_Software/mongodb/bin/mongo
@@ -28,3 +27,6 @@ db.opendatabcn_rent.count()
 
 # DELETE COLLECTION
 db.opendatabcn_rent.drop()
+
+# DELETE CURRNT DB
+db.dropDatabase()
