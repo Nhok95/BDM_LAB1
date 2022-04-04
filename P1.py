@@ -2,7 +2,7 @@
 from MongoDB import MongoDB
 
 import os
-from os.path import join, isfile
+from os.path import join
 
 # Custom classes for both phases
 from dataCollector import dataCollector
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 	# Import idealista dataset
 	idealista_path = join(sourcePath,'idealista')
 	idealista_name = 'idealista'
-	dc.import_dataset(p1_landing_db, idealista_path, idealista_name)
+	dc.import_dataset(p1_temporal_db, idealista_path, idealista_name)
 
 	# Import opendatabcn income dataset
 	opendatabcn_income_path = join(sourcePath,'opendatabcn-income')
