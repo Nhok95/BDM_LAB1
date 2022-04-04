@@ -1,120 +1,135 @@
+# Custom class to connect and interact with the Mongo data base
+from MongoDB import MongoDB
+
 import os
-from os.path import join, isfile
+import shutil
+
 import json
-import re
 import pandas as pd
 
-import pprint
+import urllib
+import urllib.request
 
 class dataCollector:
 
-    sourcePath = join(os.getcwd(),'Sources')
+	def __init__(self):
+		pass
 
-    openDataIncomePath = join(sourcePath,'opendatabcn-income')
+	# ---------------
+	# Private methods
+	# ---------------
 
-    def __init__(self):
-        pass
+	def __csv_to_json(self, csv_path, new_json_path):
 
-    def idealistaDataExtractor(self):
+		df = pd.read_csv(csv_path)
+		df.to_json(new_json_path, orient = 'table')
 
-        print("Starting data from idealista json files...")
+	# ---------------
+	# Public methods
+	# ---------------
 
-        idealistaList = []
-        idealistaPath = join(self.sourcePath,'idealista')
-        
-        jsonFiles = [f for f in os.listdir(idealistaPath) if isfile(join(idealistaPath, f))]
+	def import_dataset(self, mongodb, local_directory, dataset_name):
 
-        for jsonFile in jsonFiles:
+		# Check if the collection already exists
+		# if not, create a new one in the db
+		collection_name = dataset_name
 
-            idealistaJsonFile = []
+		print('Checking if ' + collection_name + ' exists.')
+		if not mongodb.collection_exists(collection_name):
+			print('It do not exists. Creating it.')
+			mongodb.create_collection(collection_name)
 
-            #YYYY_MM_DD_idealista.json -> YYYYMMDD
-            date = re.search(r'\d{4}_(0[1-9]|1[0-2])_(0[1-9]|[12][0-9]|3[01])', jsonFile).group(0)    
-            date = re.sub(r'_', r'', date)
+		# Check if the folder processed exists inside the folder
+		# the dataset
+		processed_path = os.path.join(local_directory, 'processed')
+		if not os.path.exists(processed_path):
+			os.mkdir(processed_path)
 
-            # Opening JSON file
-            print("### {} ###".format(date))
-            
-            f = open(join(idealistaPath, jsonFile))
-            file = json.load(f)
-            
-            # Iterating through the json
-            # list
-            for propertyJSON in file:
+		# For each file inside the dataset its extension is checked
+		# if its a json the file is directly inserted in the collection
+		# if its a csv first its converted to json and then inserted
+		for filename in os.listdir(local_directory):
+			print('Processing the file ' + filename)
 
-                if propertyJSON.get('neighborhood') != None:
-                    
-                    jsonEntity = {
-                        "propertyCode": propertyJSON.get('propertyCode'),
-                        "province": propertyJSON.get('province'),
-                        "district": propertyJSON.get('district'),
-                        "neighborhood": propertyJSON.get('neighborhood'),
-                        "latitude": propertyJSON.get('latitude'),
-                        "longitude": propertyJSON.get('longitude'),
-                        "date": date
-                    }
+			f = os.path.join(local_directory, filename)
+			if os.path.isfile(f):
 
-                    idealistaJsonFile.append(jsonEntity)
+				# The variable json_path indicates the path of the final
+				# json to insert in the database (processed or not)
+				if f.endswith('json'):
+					json_path = f
+					json_name = filename
 
-                    #print(propertyJSON)
-                    '''
-                    print("propertyCode: {}".format(propertyJSON['propertyCode']))
-                    print("district: {}".format(propertyJSON['district']))
-                    print("neighborhood: {}".format(propertyJSON['neighborhood']))
-                    print("latitude: {}".format(propertyJSON['latitude']))
-                    print("longitude: {}".format(propertyJSON['longitude']))
-                    '''
-                
-            # Closing file
-            f.close()
+				elif f.endswith('.csv'):
+					json_name = filename.replace('.csv', '.json')
+					json_path = os.path.join(local_directory, json_name)
 
-            idealistaList.append(idealistaJsonFile)
+					print('Converting the csv to a json file.')
+					self.__csv_to_json(f, json_path)
 
-        print("Data succesfully extracted.")
+					processed_csv = os.path.join(processed_path, filename)
+					shutil.move(f, processed_csv)
 
-        return idealistaList
+				else:
+					print('The file {0} was not processed as is not a json nor a csv.'.format(filename))
+					break
 
-    def lookUpExtractor(self):
+				# Read the final json
+				with open(json_path, 'r') as f_json:
+					f_content = json.load(f_json)
 
-        LookUpPath = join(self.sourcePath,'lookup_tables')
+				# Check if it is a list of documents or 
+				# just one document alone, and also check
+				# if the list is empty (mongo do not accept inserts
+				# with empty ones)
+				if isinstance(f_content, list):
+					if f_content:
 
-        ##### IDEALISTA LOOK UP TABLE #####
-        idealistaDF = pd.read_csv(open(join(LookUpPath, 'idealista_extended.csv')), delimiter=',', encoding='utf8')
+						for i, _ in enumerate(f_content):
+							f_content[i]["origin_filename"] = json_name
 
-        idealistaList = []
-        districts = list(set(idealistaDF['district']))
-        for district in districts:
-            df_by_district = idealistaDF[idealistaDF['district'] == district]
-            df_by_district.reset_index(drop=True, inplace=True)
+						mongodb.insert_many(collection_name, f_content)
+					else:
+						print('The file {0} is empty.'.format(json_name))
+				else:
+					f_content['origin_filename'] = json_name
+					mongodb.insert_one(collection_name, f_content)
 
-            neighborhoodList = []
-            for i in df_by_district.index:
-                
-                jsonNeighborhood = {
-                    "id": df_by_district['neighborhood_id'][i],
-                    "name": df_by_district['neighborhood'][i],
-                    "normalized_name": df_by_district['neighborhood_n'][i]
-                }
-                neighborhoodList.append(jsonNeighborhood)
+				# Move the file already processed to the processed folder
+				processed_json = os.path.join(processed_path, json_name)
+				shutil.move(json_path, processed_json)
 
-            jsonEntity = {
-                "district_id": df_by_district['district_id'][0],
-                "name": df_by_district['district'][0],
-                "normalized_name": df_by_district['district_n'][0],
-                "neighborhood" : neighborhoodList
+	def api_import_dataset(self, mongodb, url, resources, limit, dataset_name):
 
-            }
+		# Check if the collection already exists
+		# if not, create a new one in the db
+		collection_name = dataset_name
 
-            # Debug purpouses
-            if district == "Nou Barris":
-                pprint.pprint(jsonEntity)
+		print('Checking if ' + collection_name + ' exists.')
+		if not mongodb.collection_exists(collection_name):
+			print('It do not exists. Creating it.')
+			mongodb.create_collection(collection_name)
 
-        ##### INCOME LOOK UP TABLE #####
-        income_csv = pd.read_csv(open(join(LookUpPath, 'income_opendatabcn_extended.csv')), delimiter=',', encoding='utf8')
-        
+		print('Processing data from the url ' + url + \
+			' the dataset ' + dataset_name)
 
+		for resource_year, resource_id in resources.items():
 
-        return idealistaList
+			print('Resource year: ' + resource_year)
 
-    def openDataAPICollector(self):
-        return True
+			params = {
+				'resource_id': resource_id,
+				'limit': limit # upper limit by default in CKAN Data API 
+			}
+
+			complete_url = url + urllib.parse.urlencode(params)
+
+			response = urllib.request.urlopen(complete_url)
+			data_json = json.loads(response.read())
+
+			if data_json.get('success') == True:
+
+				f_content = data_json.get('result')
+				f_content['origin_filename'] = resource_year + '_' + collection_name
+
+				mongodb.insert_one(collection_name, f_content)
