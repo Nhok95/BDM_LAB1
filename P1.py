@@ -1,6 +1,8 @@
 # Custom class to connect and interact with the Mongo data base
 from MongoDB import MongoDB
-import constants as cnt
+
+import os
+from os.path import join, isfile
 
 # Custom classes for both phases
 from dataCollector import dataCollector
@@ -8,30 +10,29 @@ from dataPersistenceLoader import dataPersistenceLoader
 
 if __name__ == "__main__":
 
-	host = cnt.HOST
-	port = cnt.PORT
+	sourcePath = join(os.getcwd(),'Sources')
+	host = '10.4.41.45'
+	port = 27017
 
 	# ---------------
 	# DATA COLLECTORS
 	# ---------------
 
-	
-
-	p1_landing_db_name = 'p1_landing_db'
-	p1_landing_db = MongoDB(host, port, p1_landing_db_name)
+	p1_temporal_db_name = 'p1_temporal_db'
+	p1_temporal_db = MongoDB(host, port, p1_temporal_db_name)
 
 	# Instantiate the data collector
 	dc = dataCollector()
 
 	# Import idealista dataset
-	idealista_path = 'C:\\Users\\Albert Pita\\Desktop\\BDM\\sources\\idealista'
+	idealista_path = join(sourcePath,'idealista')
 	idealista_name = 'idealista'
 	dc.import_dataset(p1_landing_db, idealista_path, idealista_name)
 
 	# Import opendatabcn income dataset
-	opendatabcn_income_path = 'C:\\Users\\Albert Pita\\Desktop\\BDM\\sources\\opendatabcn-income'
+	opendatabcn_income_path = join(sourcePath,'opendatabcn-income')
 	opendatabcn_income_name = 'opendatabcn_income'
-	dc.import_dataset(p1_landing_db, opendatabcn_income_path, opendatabcn_income_name)
+	dc.import_dataset(p1_temporal_db, opendatabcn_income_path, opendatabcn_income_name)
 
 	# Import the opendatabcn average monthly rent dataset through api
 	opendatabcn_url = 'https://opendata-ajuntament.barcelona.cat/data/api/action/datastore_search?'
@@ -46,12 +47,12 @@ if __name__ == "__main__":
 		'2020': '47c9d64d-317a-45d0-8c45-45488df8601c',
 		'2021': 'cfc45f2b-62eb-4621-8486-1b90e36b4bfe'  
 	}
-	dc.api_import_dataset(p1_landing_db, opendatabcn_url, resource_dict_avg_rent, 32000, opendatabcn_avg_rent_name)
+	dc.api_import_dataset(p1_temporal_db, opendatabcn_url, resource_dict_avg_rent, 32000, opendatabcn_avg_rent_name)
 
 	# Import lookup tables
-	lookup_tables_path = 'C:\\Users\\Albert Pita\\Desktop\\BDM\\sources\\lookup_tables'
+	lookup_tables_path = join(sourcePath,'lookup_tables')
 	lookup_tables_name = 'lookup_tables'
-	dc.import_dataset(p1_landing_db, lookup_tables_path, lookup_tables_name)
+	dc.import_dataset(p1_temporal_db, lookup_tables_path, lookup_tables_name)
 
 	# -----------------------
 	# DATA PERSISTENCE LOADER
@@ -65,15 +66,15 @@ if __name__ == "__main__":
 
 	# Load idealista dataset to the persistent zone
 	persistent_idealista_name = 'persistent_idealista'
-	dpl.persistent_load(p1_landing_db, idealista_name, p1_persistence_db, persistent_idealista_name)
+	dpl.persistent_load(p1_temporal_db, idealista_name, p1_persistence_db, persistent_idealista_name)
 
 	# Load opendatabcn income dataset to the persistent zone
 	persistent_opendatabcn_income_name = 'persistent_opendatabcn_income'
-	dpl.persistent_load(p1_landing_db, opendatabcn_income_name, p1_persistence_db, persistent_opendatabcn_income_name)
+	dpl.persistent_load(p1_temporal_db, opendatabcn_income_name, p1_persistence_db, persistent_opendatabcn_income_name)
 
 	persistence_opendatabcn_avg_rent = 'persistent_opendatabcn_avg_rent'
-	dpl.api_persistent_load(p1_landing_db, opendatabcn_avg_rent_name, p1_persistence_db, persistence_opendatabcn_avg_rent)
+	dpl.api_persistent_load(p1_temporal_db, opendatabcn_avg_rent_name, p1_persistence_db, persistence_opendatabcn_avg_rent)
 
 	# Load lookup tables to the persistent zone
 	persistent_lookup_tables_name = 'persistent_lookup_tables'
-	dpl.persistent_load(p1_landing_db, lookup_tables_name, p1_persistence_db, persistent_lookup_tables_name)
+	dpl.persistent_load(p1_temporal_db, lookup_tables_name, p1_persistence_db, persistent_lookup_tables_name)
