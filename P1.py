@@ -1,5 +1,6 @@
 # Custom class to connect and interact with the Mongo data base
 from MongoDB import MongoDB
+import constants as cnt
 
 # Used to print the output clearear and prettier
 from pprint import pprint
@@ -203,12 +204,14 @@ def persistent_load(landing_db, temporal_collection, persistent_db, persistent_c
 
 if __name__ == "__main__":
 
-	host = '10.4.41.45'
-	port = 27017
+	host = cnt.HOST
+	port = cnt.PORT
 
 	# ---------------
 	# DATA COLLECTORS
 	# ---------------
+
+	
 
 	p1_landing_db_name = 'p1_landing_db'
 	p1_landing_db = MongoDB(host, port, p1_landing_db_name)

@@ -118,16 +118,3 @@ class dataCollector:
 
     def openDataAPICollector(self):
         return True
-
-
-
-
-if __name__ == "__main__":
-
-    dataCollector = dataCollector()
-
-    #idealista = dataExtractor.idealistaDataExtractor()
-    lookUp = dataCollector.lookUpExtractor()
-
-    #print(len(idealista))
-    #print(len(lookUp))
